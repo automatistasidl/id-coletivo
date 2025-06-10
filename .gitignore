@@ -1,20 +1,5 @@
 .streamlit/secrets.toml
 
-[gcp_service_account]
-type = "service_account"
-project_id = "teste-453605"
-private_key_id = "a4de87fb94e59d31fc206037b6920c5e680106fb"
-private_key = "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDsNYLvpiMlgBAA\nx+QdP2MW5QLGriUsjFxq3Z1Z8uErkK0mhniBfPeUOX9c+a8fUis+/+5cnx2NcpN1\nq/NUKRdMDrQqeasEfReripgeW86aTqEXOc30R5chigdQMDcfzgZHJvXN3T1gIh7F\nIznXbRisUKeeDfK2nJbhHvWtdS4q/lZio/WMy1KlIhR2/x5XxPCg6TM5Pit5FKxF\nJcqAeeKB8kVRD5qIvBUg5vDXnM8+N74jr5NbC7a81JCXY8y+nkazHYHAiapOa+j8\nahj5JHjKVTtsbJUBWaUhbIMujAYmT6+TohddMO/6f92ujBwVio6RLjMTPYPR9khZ\nMCqKi6KhAgMBAAECggEABw8t2bjsv7oJMGbI8N1UOirPt42cj41l1S1InrexJk7J\nd/domlEYapoBzg7pvo1DfNtj/allNhUcplWEXQlp2HRvir3uYCDXcGFg3LZocSjk\nrFemSbTKhd50y78XJKiQ/DckPTntk8YNRp3ABKnOZRb3fXQkAvRg13tIAx43iiIX\nUDVOR7DAz+plj2nNfftXJDA07kFdWEsUJOZl9YroL40B3nS545R4UzgESgi/bhOw\nvW/+vVOG+tqczkKUdW+aDvV+WkWnUYH/hNeL5bh5gO2eMfAufrUatyDuyZuX/Jbr\nU4p+vDUAxtnNJiUm08uPpRmYJiEyVyrZ0c+rWLLAAQKBgQD/Mk3WGJDIPKEaUoFq\nGFnVsAG29wyyushChqG4DoRBvSBGx0czpRoBi8MTyMWZdoI+VvNaqOWUgMAx+v5R\ndcq3RLu0aXTlimVI8/4Nb4+jgsptcMj/8WSNi89iynmdCy/8sBoUbYpoaw11tZ+p\n8LPLSPMtXb7viiSrN7WMOj5wAQKBgQDs8+coIUa+qvCA38ZneJMAuywOhW87hUXF\njNfGDnIotNljuWVIgnDDttEo19/0oXqLAdoc+jKCtbAAMaivDrh4/b26WnZX914U\nM1mJF7jpKL7bkZ8dSWOH3IBVZwMOjZ3OcJm8GdIF/IqzZUEUjO0vtnKzyy3GgUVW\nZhVqp2cyoQKBgQCaSQlx9OwjgzRLO7JuOEanwH9o5LfSnsZQIiFHq88eB3+qCvTr\nLlgosxy/q1R70YAwvFTobNBQFf8cuIhlK3fhkTaCfndkB2Xw00K3UMlgq8RCojuD\nMaf/Q5WgPpWD8q2Scc1yqD9TndVHYwUisxmgP3x14wV6wOQmd8nU+6mgAQKBgQC0\nW8JrTUjoAH0n2yzNvX1HZTDXrMFJ8Nt2zwm+e2hxi5aczZVGZ+MlVZZHHGofbno0\nLKi0vcyMqXbZ7vKSrQXFMn6jxg+mTWeSwLM6IpBhCN6dim4ugJn949zbJJmzDiA7\n7oFWJ+ExJVT9z+iFl+9CDgGo0NJ68hKw/Or4T4vBgQKBgQDSJFdS9aN3Dspw3bv7\nlySXOCALCJZPA0b2FFzYq9AEBWNUnFKnloRUken5RdKQkC/9HcqLxRmOFBuvTdH1\nVpzm7dqqD1nWLAEs+pDHHq8G1YmorfqqWXkxmAlg9xPtN900bucMquvVTYLrq6NJ\nNv+Fq9dbGITn9E3vCehiRELLyg==\n-----END PRIVATE KEY-----\n"
-client_email = "id-coletivo@teste-453605.iam.gserviceaccount.com"
-client_id = "117613702175995910244"
-auth_uri = "https://accounts.google.com/o/oauth2/auth"
-token_uri = "https://oauth2.googleapis.com/token"
-auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
-client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/id-coletivo%40teste-453605.iam.gserviceaccount.com"
-
-[spreadsheet]
-key = "1QRshqyu80gCerOZnwIAu_DUptyJPgWRyEq_BlSHWxlE"  # ID da sua planilha
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
