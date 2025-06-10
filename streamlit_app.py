@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import gspread
+import traceback
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 
@@ -29,14 +30,36 @@ SCOPES = [
 # Autenticação no Google Sheets
 @st.cache_resource(ttl=300, show_spinner="Conectando ao Google Sheets...")
 def get_google_sheet():
-    creds = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"],
-        scopes=SCOPES
-    )
-    client = gspread.authorize(creds)
-    return client.open_by_key(SPREADSHEET_KEY)
+    try:
+        # Obter informações da conta de serviço
+        sa_info = st.secrets["gcp_service_account"]
+        
+        # Verificar se a chave privada está correta
+        if not sa_info["private_key"].startswith("-----BEGIN PRIVATE KEY-----"):
+            st.error("Formato inválido da chave privada. Verifique as quebras de linha.")
+            st.stop()
+            
+        creds = Credentials.from_service_account_info(
+            sa_info,
+            scopes=SCOPES
+        )
+        client = gspread.authorize(creds)
+        spreadsheet = client.open_by_key(SPREADSHEET_KEY)
+        
+        # Verificar acesso
+        try:
+            spreadsheet.title  # Tentar acessar o título da planilha
+        except Exception as e:
+            st.error(f"Falha ao acessar a planilha: {str(e)}")
+            st.error(f"Verifique se a planilha foi compartilhada com: {sa_info['client_email']}")
+            st.stop()
+            
+        return spreadsheet
+    except Exception as e:
+        st.error(f"Erro na autenticação: {traceback.format_exc()}")
+        st.stop()
 
-# Inicializar planilha
+# Inicializar planilha com tratamento detalhado de erros
 def init_spreadsheet():
     try:
         spreadsheet = get_google_sheet()
@@ -44,21 +67,25 @@ def init_spreadsheet():
         # Criar/validar aba de registros
         try:
             sheet = spreadsheet.worksheet(SHEET_NAME)
+            # Verificar se tem cabeçalho
             if not sheet.row_values(1):
                 sheet.append_row(["matricula", "setor", "atingimento", "timestamp", "lider"])
         except gspread.WorksheetNotFound:
+            # Se não existir, criar a aba
             sheet = spreadsheet.add_worksheet(title=SHEET_NAME, rows="1000", cols="10")
             sheet.append_row(["matricula", "setor", "atingimento", "timestamp", "lider"])
         
         # Criar/validar aba de setores
         try:
             setores_sheet = spreadsheet.worksheet(SETORES_SHEET)
+            # Verificar se tem dados
             if len(setores_sheet.get_all_values()) <= 1:
                 setores_sheet.clear()
                 setores_sheet.append_row(["setor"])
                 for setor in SETORES_PADRAO:
                     setores_sheet.append_row([setor])
         except gspread.WorksheetNotFound:
+            # Se não existir, criar a aba
             setores_sheet = spreadsheet.add_worksheet(title=SETORES_SHEET, rows="100", cols="1")
             setores_sheet.append_row(["setor"])
             for setor in SETORES_PADRAO:
@@ -66,7 +93,12 @@ def init_spreadsheet():
                 
         return True
     except Exception as e:
-        st.error(f"Erro crítico ao acessar a planilha: {str(e)}")
+        error_msg = f"Erro crítico ao acessar a planilha: {traceback.format_exc()}"
+        st.error(error_msg)
+        st.error("Verifique se:")
+        st.error(f"1. A planilha foi compartilhada com: {st.secrets['gcp_service_account']['client_email']}")
+        st.error("2. A chave da planilha está correta")
+        st.error("3. O formato da chave privada está correto (com quebras de linha)")
         st.stop()
         return False
 
@@ -77,7 +109,7 @@ def load_data():
         sheet = get_google_sheet().worksheet(SHEET_NAME)
         return pd.DataFrame(sheet.get_all_records())
     except Exception as e:
-        st.error(f"Erro ao carregar dados: {str(e)}")
+        st.error(f"Erro ao carregar dados: {traceback.format_exc()}")
         return pd.DataFrame()
 
 @st.cache_data(ttl=300)
@@ -102,7 +134,7 @@ def save_data(matricula, setor, atingimento, lider):
         sheet.append_row(new_row)
         return True
     except Exception as e:
-        st.error(f"Falha ao salvar registro: {str(e)}")
+        st.error(f"Falha ao salvar registro: {traceback.format_exc()}")
         return False
 
 def save_new_setor(new_setor):
@@ -121,12 +153,16 @@ def save_new_setor(new_setor):
         load_setores.clear()
         return True, f"Setor '{new_setor}' adicionado com sucesso!"
     except Exception as e:
-        return False, f"Erro ao salvar setor: {str(e)}"
+        return False, f"Erro ao salvar setor: {traceback.format_exc()}"
 
 # Interface Streamlit
 def main():
     st.title("🏢 Controle de Coletivo/Sinergia")
     st.subheader("Registro de Atuação de Colaboradores")
+    
+    # Mostrar e-mail do service account para referência
+    sa_email = st.secrets["gcp_service_account"]["client_email"]
+    st.caption(f"Service Account: {sa_email}")
     
     # Inicializar planilha
     init_spreadsheet()
@@ -239,7 +275,7 @@ def main():
         else:
             st.info("Nenhum registro encontrado. Adicione novos registros acima.")
     except Exception as e:
-        st.error(f"Erro ao processar dados: {str(e)}")
+        st.error(f"Erro ao processar dados: {traceback.format_exc()}")
 
 if __name__ == "__main__":
     main()
