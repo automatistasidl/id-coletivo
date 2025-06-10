@@ -6,7 +6,7 @@ from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 
 # Configuração inicial
-SPREADSHEET_KEY = st.secrets["spreadsheet_key"]
+SPREADSHEET_KEY = st.secrets["spreadsheet"]["key"]
 SHEET_NAME = "Registros"
 SETORES_SHEET = "Setores"
 SETORES_PADRAO = [
