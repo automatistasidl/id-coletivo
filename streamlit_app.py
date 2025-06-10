@@ -10,11 +10,14 @@ SETORES_PADRAO = [
     "Aparcador", "Runner", "Recebimento", "Carregamento",
     "Cabide", "Multiplicador", "Qualidade", "Outros"
 ]
+ATINGIMENTO_OPCOES = ["Até 120%", "Entre 120% e 130%", "Mais do que 130%"]
 
 # Inicializar arquivos se não existirem
 def init_files():
     if not os.path.exists(DATA_FILE):
-        pd.DataFrame(columns=["matricula", "setor", "timestamp", "lider"]).to_csv(DATA_FILE, index=False)
+        pd.DataFrame(columns=[
+            "matricula", "setor", "atingimento", "timestamp", "lider"
+        ]).to_csv(DATA_FILE, index=False)
     
     if not os.path.exists(SETORES_FILE):
         pd.DataFrame(SETORES_PADRAO, columns=["setor"]).to_csv(SETORES_FILE, index=False)
@@ -28,11 +31,12 @@ def load_setores():
     return df['setor'].tolist()
 
 # Salvar dados
-def save_data(matricula, setor, lider):
+def save_data(matricula, setor, atingimento, lider):
     df = load_data()
     new_data = pd.DataFrame([{
         "matricula": matricula,
         "setor": setor,
+        "atingimento": atingimento,
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "lider": lider
     }])
@@ -55,37 +59,64 @@ def main():
     
     init_files()
     
-    # Identificação do líder
-    lider = st.text_input("Nome do Líder:", key="lider_name")
+    # Identificação do líder (mantido entre envios)
+    if 'lider' not in st.session_state:
+        st.session_state.lider = ""
+    lider = st.text_input("Nome do Líder:", value=st.session_state.lider, key="lider_name")
+    st.session_state.lider = lider
     
     # Formulário principal
-    with st.form("registro_form"):
-        matricula = st.text_input("Matrícula do Colaborador:", max_chars=10)
+    with st.form("registro_form", clear_on_submit=True):
+        # Usar session_state para manter os valores durante a sessão
+        if 'matricula' not in st.session_state:
+            st.session_state.matricula = ""
+        if 'selected_setor' not in st.session_state:
+            st.session_state.selected_setor = SETORES_PADRAO[0]
+        if 'novo_setor' not in st.session_state:
+            st.session_state.novo_setor = ""
+        if 'atingimento' not in st.session_state:
+            st.session_state.atingimento = ATINGIMENTO_OPCOES[0]
+        
+        matricula = st.text_input("Matrícula do Colaborador:", 
+                                 max_chars=10, 
+                                 value=st.session_state.matricula,
+                                 key="matricula")
         
         setores_options = load_setores()
-        selected_setor = st.selectbox("Setor de Atuação:", setores_options, index=0)
+        selected_setor = st.selectbox("Setor de Atuação:", 
+                                     setores_options, 
+                                     index=setores_options.index(st.session_state.selected_setor),
+                                     key="setor_select")
         
         # Campo para novo setor se "Outros" for selecionado
         novo_setor = ""
         if selected_setor == "Outros":
-            novo_setor = st.text_input("Especifique o novo setor:", key="new_sector")
+            novo_setor = st.text_input("Especifique o novo setor:", 
+                                      value=st.session_state.novo_setor,
+                                      key="new_sector")
+        
+        # Campo para atingimento
+        atingimento = st.selectbox("Nível de Atingimento:", 
+                                  ATINGIMENTO_OPCOES, 
+                                  index=ATINGIMENTO_OPCOES.index(st.session_state.atingimento),
+                                  key="atingimento_select")
         
         submitted = st.form_submit_button("Registrar Atuação")
         
         if submitted:
             if not lider:
                 st.error("Por favor, informe o nome do líder!")
-                return
+                st.stop()
                 
             if not matricula.isdigit() or len(matricula) < 3:
                 st.error("Matrícula inválida! Deve conter apenas números e ter pelo menos 3 dígitos.")
-                return
+                st.stop()
                 
             setor_final = novo_setor if selected_setor == "Outros" and novo_setor else selected_setor
             
             if selected_setor == "Outros" and not novo_setor:
                 st.error("Por favor, informe o nome do novo setor!")
-                return
+                st.stop()
                 
             if selected_setor == "Outros" and novo_setor:
                 if save_new_setor(novo_setor):
@@ -93,8 +124,14 @@ def main():
                 else:
                     st.info(f"Setor '{novo_setor}' já existia na lista de opções")
             
-            save_data(matricula, setor_final, lider)
-            st.success(f"Registro salvo! Colaborador {matricula} atuando como {setor_final}")
+            save_data(matricula, setor_final, atingimento, lider)
+            st.success(f"✅ Registro salvo! Colaborador {matricula} atuando como {setor_final} com {atingimento}")
+            
+            # Limpar campos específicos após envio bem-sucedido
+            st.session_state.matricula = ""
+            st.session_state.selected_setor = SETORES_PADRAO[0]
+            st.session_state.novo_setor = ""
+            st.session_state.atingimento = ATINGIMENTO_OPCOES[0]
 
     # Visualização de dados
     st.divider()
@@ -107,14 +144,25 @@ def main():
         
         # Estatísticas
         st.subheader("📊 Estatísticas")
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Total de Registros", len(df))
         with col2:
             st.metric("Setores Diferentes", df['setor'].nunique())
+        with col3:
+            st.metric("Líderes Ativos", df['lider'].nunique())
         
-        # Top setores
-        st.bar_chart(df['setor'].value_counts())
+        # Gráficos
+        tab1, tab2, tab3 = st.tabs(["Setores", "Atingimento", "Líderes"])
+        
+        with tab1:
+            st.bar_chart(df['setor'].value_counts())
+        
+        with tab2:
+            st.bar_chart(df['atingimento'].value_counts())
+        
+        with tab3:
+            st.bar_chart(df['lider'].value_counts().head(5))
     else:
         st.info("Nenhum registro encontrado. Adicione novos registros acima.")
 
