@@ -84,9 +84,15 @@ def main():
                                  key="matricula")
         
         setores_options = load_setores()
+        # Tratamento para caso o setor salvo não esteja mais na lista
+        try:
+            default_index = setores_options.index(st.session_state.selected_setor)
+        except ValueError:
+            default_index = 0
+        
         selected_setor = st.selectbox("Setor de Atuação:", 
                                      setores_options, 
-                                     index=setores_options.index(st.session_state.selected_setor),
+                                     index=default_index,
                                      key="setor_select")
         
         # Campo para novo setor se "Outros" for selecionado
@@ -128,14 +134,8 @@ def main():
             save_data(matricula, setor_final, atingimento, lider)
             st.success(f"✅ Registro salvo! Colaborador {matricula} atuando como {setor_final} com {atingimento}")
             
-            # Limpar campos específicos após envio bem-sucedido
-            st.session_state.matricula = ""
-            st.session_state.selected_setor = SETORES_PADRAO[0]
-            st.session_state.novo_setor = ""
-            st.session_state.atingimento = ATINGIMENTO_OPCOES[0]
-            
-            # Forçar reexecução do script para atualizar os campos
-            st.experimental_rerun()
+            # Forçar recarga da página para resetar os campos
+            st.rerun()
 
     # Visualização de dados
     st.divider()
