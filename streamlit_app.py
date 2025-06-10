@@ -10,7 +10,13 @@ SETORES_PADRAO = [
     "Aparcador", "Runner", "Recebimento", "Carregamento",
     "Cabide", "Multiplicador", "Qualidade", "Outros"
 ]
-ATINGIMENTO_OPCOES = ["Até 120%", "Entre 120% e 130%", "Mais do que 130%"]
+# OPÇÕES ATUALIZADAS DE ATINGIMENTO
+ATINGIMENTO_OPCOES = [
+    "Menor que 120%",
+    "Maior ou igual a 120% e Menor que 130%",
+    "Maior ou igual a 130% e Menor que 140%",
+    "Maior do que 140%"
+]
 
 # Inicializar arquivos se não existirem
 def init_files():
@@ -102,7 +108,7 @@ def main():
                                       value=st.session_state.novo_setor,
                                       key="new_sector")
         
-        # Campo para atingimento
+        # Campo para atingimento (COM OPÇÕES ATUALIZADAS)
         atingimento = st.selectbox("Nível de Atingimento:", 
                                   ATINGIMENTO_OPCOES, 
                                   index=ATINGIMENTO_OPCOES.index(st.session_state.atingimento),
