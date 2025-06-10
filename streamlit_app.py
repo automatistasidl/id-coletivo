@@ -52,53 +52,62 @@ def save_new_setor(new_setor):
         return True
     return False
 
+# Inicializar estados da sessão
+def init_session_state():
+    if 'lider' not in st.session_state:
+        st.session_state.lider = ""
+    if 'reset_form' not in st.session_state:
+        st.session_state.reset_form = False
+
 # Interface Streamlit
 def main():
     st.title("🏢 Controle de Coletivo/Sinergia")
     st.subheader("Registro de Atuação de Colaboradores")
     
     init_files()
+    init_session_state()
     
     # Identificação do líder (mantido entre envios)
-    if 'lider' not in st.session_state:
-        st.session_state.lider = ""
     lider = st.text_input("Nome do Líder:", value=st.session_state.lider, key="lider_name")
     st.session_state.lider = lider
     
-    # Formulário principal
-    with st.form("registro_form", clear_on_submit=True):
-        # Usar session_state para manter os valores durante a sessão
-        if 'matricula' not in st.session_state:
-            st.session_state.matricula = ""
-        if 'selected_setor' not in st.session_state:
-            st.session_state.selected_setor = SETORES_PADRAO[0]
-        if 'novo_setor' not in st.session_state:
-            st.session_state.novo_setor = ""
-        if 'atingimento' not in st.session_state:
-            st.session_state.atingimento = ATINGIMENTO_OPCOES[0]
+    # Formulário principal com limpeza condicional
+    with st.form("registro_form"):
+        # Inicializar campos do formulário
+        if 'reset_form' in st.session_state and st.session_state.reset_form:
+            matricula = ""
+            selected_setor = SETORES_PADRAO[0]
+            novo_setor = ""
+            atingimento = ATINGIMENTO_OPCOES[0]
+            st.session_state.reset_form = False
+        else:
+            matricula = ""
+            selected_setor = SETORES_PADRAO[0]
+            novo_setor = ""
+            atingimento = ATINGIMENTO_OPCOES[0]
         
         matricula = st.text_input("Matrícula do Colaborador:", 
                                  max_chars=10, 
-                                 value=st.session_state.matricula,
+                                 value=matricula,
                                  key="matricula")
         
         setores_options = load_setores()
         selected_setor = st.selectbox("Setor de Atuação:", 
                                      setores_options, 
-                                     index=setores_options.index(st.session_state.selected_setor),
+                                     index=setores_options.index(selected_setor),
                                      key="setor_select")
         
         # Campo para novo setor se "Outros" for selecionado
         novo_setor = ""
         if selected_setor == "Outros":
             novo_setor = st.text_input("Especifique o novo setor:", 
-                                      value=st.session_state.novo_setor,
+                                      value=novo_setor,
                                       key="new_sector")
         
         # Campo para atingimento
         atingimento = st.selectbox("Nível de Atingimento:", 
                                   ATINGIMENTO_OPCOES, 
-                                  index=ATINGIMENTO_OPCOES.index(st.session_state.atingimento),
+                                  index=ATINGIMENTO_OPCOES.index(atingimento),
                                   key="atingimento_select")
         
         submitted = st.form_submit_button("Registrar Atuação")
@@ -127,11 +136,9 @@ def main():
             save_data(matricula, setor_final, atingimento, lider)
             st.success(f"✅ Registro salvo! Colaborador {matricula} atuando como {setor_final} com {atingimento}")
             
-            # Limpar campos específicos após envio bem-sucedido
-            st.session_state.matricula = ""
-            st.session_state.selected_setor = SETORES_PADRAO[0]
-            st.session_state.novo_setor = ""
-            st.session_state.atingimento = ATINGIMENTO_OPCOES[0]
+            # Sinalizar para limpar campos na próxima execução
+            st.session_state.reset_form = True
+            st.experimental_rerun()
 
     # Visualização de dados
     st.divider()
