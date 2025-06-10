@@ -5,8 +5,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 
-# Configuração inicial - CORREÇÃO AQUI
-SPREADSHEET_KEY = st.secrets["spreadsheet"]["key"]  # Acesso corrigido
+# Configuração inicial
+SPREADSHEET_KEY = st.secrets["spreadsheet"]["key"]
 SHEET_NAME = "Registros"
 SETORES_SHEET = "Setores"
 SETORES_PADRAO = [
@@ -20,10 +20,19 @@ ATINGIMENTO_OPCOES = [
     "Maior do que 140%"
 ]
 
-# Cache para otimizar chamadas ao Google Sheets
+# Escopos necessários
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+# Autenticação no Google Sheets
 @st.cache_resource(ttl=300, show_spinner="Conectando ao Google Sheets...")
 def get_google_sheet():
-    creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=SCOPES
+    )
     client = gspread.authorize(creds)
     return client.open_by_key(SPREADSHEET_KEY)
 
@@ -35,7 +44,6 @@ def init_spreadsheet():
         # Criar/validar aba de registros
         try:
             sheet = spreadsheet.worksheet(SHEET_NAME)
-            # Verificar se tem cabeçalho
             if not sheet.row_values(1):
                 sheet.append_row(["matricula", "setor", "atingimento", "timestamp", "lider"])
         except gspread.WorksheetNotFound:
@@ -45,7 +53,6 @@ def init_spreadsheet():
         # Criar/validar aba de setores
         try:
             setores_sheet = spreadsheet.worksheet(SETORES_SHEET)
-            # Verificar se tem dados
             if len(setores_sheet.get_all_values()) <= 1:
                 setores_sheet.clear()
                 setores_sheet.append_row(["setor"])
@@ -111,7 +118,6 @@ def save_new_setor(new_setor):
             return False, f"Setor '{new_setor}' já existe"
         
         setores_sheet.append_row([new_setor])
-        # Limpar cache de setores
         load_setores.clear()
         return True, f"Setor '{new_setor}' adicionado com sucesso!"
     except Exception as e:
@@ -164,7 +170,6 @@ def main():
             if error:
                 st.stop()
                 
-            # Processar novo setor se necessário
             if selected_setor == "Outros" and novo_setor:
                 success, message = save_new_setor(novo_setor)
                 if success:
@@ -172,7 +177,6 @@ def main():
                 else:
                     st.warning(message)
             
-            # Salvar registro principal
             if save_data(matricula, setor_final, atingimento, lider):
                 st.toast(f"✅ Registro salvo! Colaborador {matricula} atuando como {setor_final}", icon="✅")
                 st.session_state.submitted = True
@@ -181,7 +185,6 @@ def main():
     st.divider()
     st.subheader("Registros Atuais")
     
-    # Botão para forçar atualização
     if st.button("Atualizar Dados", help="Recarregar dados da planilha"):
         load_data.clear()
         load_setores.clear()
